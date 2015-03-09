@@ -16,7 +16,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 from mock import patch
 from unittest import TestCase
 from gs.profile.email.relay.relayer import RelayMessage
-import gs.profile.email.relay.relayer
+import gs.profile.email.relay.relayer  # lint:ok
 
 
 class TestRelayMessage(TestCase):
@@ -39,7 +39,7 @@ class TestRelayMessage(TestCase):
             rm.userId_from_email(email)
 
     @patch('gs.profile.email.relay.relayer.createObject')
-    def test_via_name(self, mockCreateObject):
+    def test_get_via_name(self, mockCreateObject):
         mockSiteInfo = mockCreateObject.return_value
         mockSiteInfo.name = 'Le site'
 
@@ -48,3 +48,26 @@ class TestRelayMessage(TestCase):
         r = rm.get_via_name(leNom)
         expected = b'=?utf-8?q?=C3=87a_va_via_Le_site?='
         self.assertEqual(expected, r)
+
+    @patch('gs.profile.email.relay.relayer.createObject')
+    def test_munge_for_dmarc(self, mockCreateObject):
+        mockSiteInfo = mockCreateObject.return_value
+        mockSiteInfo.name = 'Le site'
+        supportEmail = 'support@lists.example.com'
+        mockSiteInfo.get_support_email.return_value = supportEmail
+
+        # --=mpj17=-- We do not need a full message, just a dict that looks
+       # like the headers of an email message
+        f = 'Me! <member@example.com>'
+        m = {}
+        m['From'] = f
+        rm = RelayMessage(None)
+        rm.munge_for_dmarc(m)
+
+        self.assertIn('From', m)
+        expected = 'Me! via Le site <{0}>'.format(supportEmail)
+        self.assertEqual(expected, m['From'])
+        self.assertIn('Sender', m)
+        self.assertEqual(f, m['Sender'])
+        self.assertIn('Reply-to', m)
+        self.assertEqual('member@example.com', m['Reply-to'])
