@@ -12,9 +12,11 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ############################################################################
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, unicode_literals, print_function
+from mock import patch
 from unittest import TestCase
 from gs.profile.email.relay.relayer import RelayMessage
+import gs.profile.email.relay.relayer
 
 
 class TestRelayMessage(TestCase):
@@ -35,3 +37,14 @@ class TestRelayMessage(TestCase):
         email = 'should.fail'
         with self.assertRaises(ValueError):
             rm.userId_from_email(email)
+
+    @patch('gs.profile.email.relay.relayer.createObject')
+    def test_via_name(self, mockCreateObject):
+        mockSiteInfo = mockCreateObject.return_value
+        mockSiteInfo.name = 'Le site'
+
+        rm = RelayMessage(None)
+        leNom = 'Ça va'
+        r = rm.get_via_name(leNom)
+        expected = b'=?utf-8?q?=C3=87a_va_via_Le_site?='
+        self.assertEqual(expected, r)
