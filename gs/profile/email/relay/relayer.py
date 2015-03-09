@@ -83,8 +83,8 @@ class RelayMessage(object):
             # Reply-to just contains the addr, not the fancy names
             message['Reply-to'] = oldFrom[1]
         viaName = self.get_via_name(oldFrom[0])
-        message['From'] = formataddr(viaName,
-                                     self.siteInfo.get_support_email())
+        message['From'] = formataddr((viaName,
+                                      self.siteInfo.get_support_email()))
 
     def relay(self, messageString):
         parser = Parser()
