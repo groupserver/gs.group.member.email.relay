@@ -1,9 +1,9 @@
-===============================
-``gs.group.member.email.relay``
-===============================
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Relay messages to group members
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+==========================
+``gs.profile.email.relay``
+==========================
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Relay messages to someone
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :Author: `Michael JasonSmith`_
 :Contact: Michael JasonSmith <mpj17@onlinegroups.net>
@@ -13,6 +13,9 @@ Relay messages to group members
   `Creative Commons Attribution-Share Alike 4.0 International License`_
   by `OnlineGroups.net`_.
 
+..  _Creative Commons Attribution-Share Alike 4.0 International License:
+    http://creativecommons.org/licenses/by-sa/4.0/
+
 Introduction
 ============
 
@@ -21,7 +24,7 @@ Resources
 =========
 
 - Code repository:
-  https://github.com/groupserver/gs.group.member.email.relay
+  https://github.com/groupserver/gs.profile.email.relay
 - Questions and comments to
   http://groupserver.org/groups/development
 - Report bugs at https://redmine.iopen.net/projects/groupserver

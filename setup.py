@@ -27,7 +27,7 @@ with codecs.open(os.path.join("docs", "HISTORY.rst"),
     long_description += '\n' + f.read()
 
 setup(
-    name='gs.group.member.email.relay',
+    name='gs.profile.email.relay',
     version=version,
     description="Relay messages on to group members",
     long_description=long_description,
@@ -45,18 +45,15 @@ setup(
     keywords='user, group, member, group member, email, message',
     author='Michael JasonSmith',
     author_email='mpj17@onlinegroups.net',
-    url='https://github.com/groupserver/gs.group.member.email.relay/',
+    url='https://github.com/groupserver/gs.profile.email.relay/',
     license='ZPL 2.1',
     packages=find_packages(exclude=['ez_setup']),
-    namespace_packages=['gs', 'gs.group', 'gs.group.member',
-                        'gs.group.member.email', ],
+    namespace_packages=['gs', 'gs.profile', 'gs.profile.email', ],
     include_package_data=True,
     zip_safe=False,
     install_requires=[
         'setuptools',
         'zope.cachedescriptors',
-        'gs.group.base',
-        'gs.group.home',
     ],
     entry_points="""
     # -*- Entry points: -*-
