@@ -14,7 +14,7 @@
 ############################################################################
 from __future__ import absolute_import, unicode_literals
 from unittest import TestSuite, main as unittest_main
-from gs.group.member.email.relay.tests.relayer import TestRelayMessage
+from gs.profile.email.relay.tests.relayer import TestRelayMessage
 testCases = (TestRelayMessage, )
 
 
