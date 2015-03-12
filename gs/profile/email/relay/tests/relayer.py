@@ -22,7 +22,7 @@ import gs.profile.email.relay.relayer  # lint:ok
 class TestRelayMessage(TestCase):
     def test_userId_from_email(self):
         rm = RelayMessage(None)
-        email = 'member-1a2b3c@groups.example.com'
+        email = 'p-1a2b3c@groups.example.com'
         r = rm.userId_from_email(email)
         self.assertEqual('1a2b3c', r)
 

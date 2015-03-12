@@ -52,9 +52,23 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
+        'gs.auth.token',
+        'gs.cache',
+        'gs.content.form.base',
+        'gs.dmarc',
+        'gs.email',
+        'gs.profile.email.base',
         'setuptools',
         'zope.cachedescriptors',
+        'zope.component',
+        'zope.formlib',
+        'zope.interface',
+        'zope.schema',
     ],
+    tests_require=[
+        'mock',
+    ],
+    test_suite="gs.profile.email.relay.tests.test_all",
     entry_points="""
     # -*- Entry points: -*-
     """, )
