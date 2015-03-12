@@ -26,7 +26,7 @@ from gs.cache import cache
 
 
 class RelayMessage(object):
-    relayAddrRe = re.compile('member-(.+)@(.+)')
+    relayAddrRe = re.compile('p-(.+)@(.+)')
     actualPolicies = (ReceiverPolicy.quarantine, ReceiverPolicy.reject)
 
     def __init__(self, context):
