@@ -2,4 +2,10 @@
 <configure xmlns="http://namespaces.zope.org/zope"
            xmlns:browser="http://namespaces.zope.org/browser"
            i18n_domain="groupserver">
+
+  <browser:page
+    for="Products.GSContent.interfaces.IGSSiteFolder"
+    name="gs-profile-email-relay.html"
+    class=".form.RelayEmail"
+    permission="zope2.Public"/>
 </configure>

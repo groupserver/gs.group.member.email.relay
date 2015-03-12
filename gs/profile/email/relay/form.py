@@ -17,13 +17,13 @@ import base64
 from zope.formlib import form
 from Products.Five.browser.pagetemplatefile import ZopeTwoPageTemplateFile
 from gs.auth.token import log_auth_error
+from gs.content.form.base import SiteForm
 from .relayer import RelayMessage
-#from .audit import AddAuditor, ADD_EMAIL
-from .base import ListInfoForm
+# from .audit import AddAuditor, ADD_EMAIL
 from .interfaces import IRelayEmail
 
 
-class RelayEmail(ListInfoForm):
+class RelayEmail(SiteForm):
     label = 'Relay an email'
     pageTemplateFileName = 'browser/templates/form.pt'
     template = ZopeTwoPageTemplateFile(pageTemplateFileName)
@@ -40,7 +40,7 @@ class RelayEmail(ListInfoForm):
         except TypeError:
             # wasn't base64 encoded. Try and proceed anyway!
             msg = data['emailMessage']
-        r = RelayMessage()
+        r = RelayMessage(self.context)
         r.relay(msg)
         # Because the text-version of the email message can mess with
         # the content type

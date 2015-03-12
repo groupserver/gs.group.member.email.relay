@@ -1,0 +1,32 @@
+<html metal:use-macro="context/@@groupserver_site_home_layout/page">
+  <head>
+    <title metal:fill-slot="title">
+      <span tal:replace="view/label"/>:
+      <span tal:replace="view/siteInfo/name"/>
+    </title>
+  </head>
+  <body>
+    <tal:block content="structure provider:groupserver.FormStatusMessage"
+      define="errors view/errors; status view/status; widgets view/widgets"
+      metal:fill-slot="messages">&#160;</tal:block>
+    <tal:block metal:fill-slot="contextnavigation">&#160;</tal:block>
+    <div id="gs-profile-email-relay"
+      metal:fill-slot="body">
+      <form id="gs-profile-email-relay-form" 
+        enctype="multipart/form-data"  method="post" action="."
+        tal:attributes="action request/URL" >
+        <h1 tal:content="view/label">Add</h1>
+        <tal:block define="widgets view/widgets">
+          <tal:block replace="structure provider:groupserver.FormWidgets"/>
+        </tal:block>
+        <div class="buttons" tal:condition="view/availableActions">
+          <tal:block repeat="action view/actions">
+            <div class="formelementbutton">
+              <span tal:replace="structure action/render">Button</span>
+            </div>
+          </tal:block>
+        </div><!--buttons-->
+      </form><!--gs-profile-email-relay-form-->
+    </div><!--gs-profile-email-relay-->
+  </body>
+</html>
