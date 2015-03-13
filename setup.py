@@ -52,8 +52,11 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
+        'Products.CustomUserFolder',
+        'Products.GSAuditTrail',
         'gs.auth.token',
         'gs.cache',
+        'gs.core',
         'gs.content.form.base',
         'gs.dmarc',
         'gs.email',

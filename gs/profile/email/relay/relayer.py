@@ -23,6 +23,7 @@ from gs.dmarc import (lookup_receiver_policy, ReceiverPolicy)
 from gs.profile.email.base import EmailUser
 from gs.email import send_email
 from gs.cache import cache
+from .audit import RELAY_TO_USER_FROM_USER, RELAY_TO_USER_FROM_NONUSER, Auditor
 
 
 class RelayMessage(object):
@@ -51,15 +52,19 @@ class RelayMessage(object):
         retval = m.groups()[0]
         return retval
 
-    def new_to(self, oldTo):
-        'Get the new To address from the old address'
-        userId = self.userId_from_email(oldTo)
+    def userInfo_from_obfuscated_email(self, o_email):
+        'Get the userInfo object from the obfuscated email address'
+        userId = self.userId_from_email(o_email)
         userInfo = createObject('groupserver.UserFromId', self.context,
                                 userId)
+        return userInfo
+
+    def new_to(self, userInfo):
+        'Get the new To address from the userInfo object'
         eu = EmailUser(self.context, userInfo)
         addrs = eu.get_verified_addresses()
         addrs = addrs if addrs else eu.get_unverified_addresses()  # Legit?
-        assert addrs, 'No addresses for {0}'.format(oldTo)
+        assert addrs, 'No addresses for {0}'.format(userInfo.id)
 
         retval = addrs[0]
         return retval
@@ -92,7 +97,8 @@ class RelayMessage(object):
 
         oldTo = message['To']
         message['x-original-to'] = oldTo
-        newTo = self.new_to(oldTo)
+        rui = self.userInfo_from_obfuscated_email(oldTo)
+        newTo = self.new_to(rui)
         message['To'] = newTo
 
         oldFrom = parseaddr(message['From'])
@@ -103,9 +109,25 @@ class RelayMessage(object):
             msg = m.format(addr=oldFrom[1], err=ie)
             raise ValueError(msg)
 
+        sui = createObject('groupserver.EmailUserFromEmailAddress',
+                           self.context, oldFrom[1])
+        sui = None if sui is None else sui.userInfo
+
         dmarcPolicy = self.get_dmarc_policy_for_host(origHost)
         if (dmarcPolicy in self.actualPolicies):
             self.munge_for_dmarc(message)
 
+        auditor = self.get_auditor(rui, sui)
+        oldToAddress = parseaddr(oldTo)[1]
+        if sui is None:
+            auditor.info(RELAY_TO_USER_FROM_NONUSER, oldToAddress, oldFrom[1])
+        else:
+            auditor.info(RELAY_TO_USER_FROM_USER, oldToAddress)
+
         mailString = message.as_string()
         send_email(self.siteInfo.get_support_email(), newTo, mailString)
+
+    def get_auditor(self, receivingUserInfo, sendingUserInfo):
+        auditor = Auditor(self.context, receivingUserInfo, sendingUserInfo,
+                          self.siteInfo)
+        return auditor
