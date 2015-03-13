@@ -26,8 +26,10 @@ from gs.cache import cache
 from .audit import RELAY_TO_USER_FROM_USER, RELAY_TO_USER_FROM_NONUSER, Auditor
 
 
+RELAY_ADDRESS_PREFIX = 'p-'
+
 class RelayMessage(object):
-    relayAddrRe = re.compile('p-(.+)@(.+)')
+    relayAddrRe = re.compile('%s(.+)@(.+)' % RELAY_ADDRESS_PREFIX)
     actualPolicies = (ReceiverPolicy.quarantine, ReceiverPolicy.reject)
 
     def __init__(self, context):
@@ -99,7 +101,7 @@ class RelayMessage(object):
         message['x-original-to'] = oldTo
         rui = self.userInfo_from_obfuscated_email(oldTo)
         newTo = self.new_to(rui)
-        message['To'] = newTo
+        message.replace_header('To', newTo)
 
         oldFrom = parseaddr(message['From'])
         try:
