@@ -101,7 +101,7 @@ class RelayMessage(object):
         message['x-original-to'] = oldTo
         rui = self.userInfo_from_obfuscated_email(oldTo)
         newTo = self.new_to(rui)
-        message['To'] = newTo
+        message.replace_header('To', newTo)
 
         oldFrom = parseaddr(message['From'])
         try:
