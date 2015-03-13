@@ -16,7 +16,20 @@ from __future__ import absolute_import, unicode_literals, print_function
 from mock import patch
 from unittest import TestCase
 from gs.profile.email.relay.relayer import RelayMessage
-import gs.profile.email.relay.relayer  # lint:ok
+
+
+test_email_for_relay = """\
+From: "GroupServer Administrator" <admin@gstest>
+Subject: Donkeys
+To: p-userId1@gstest
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Sender: "GroupServer Administrator" <admin@gstest>
+
+Donkeys are great!
+
+"""
 
 
 class TestRelayMessage(TestCase):
@@ -57,7 +70,7 @@ class TestRelayMessage(TestCase):
         mockSiteInfo.get_support_email.return_value = supportEmail
 
         # --=mpj17=-- We do not need a full message, just a dict that looks
-       # like the headers of an email message
+        # like the headers of an email message
         f = 'Me! <member@example.com>'
         m = {}
         m['From'] = f
@@ -71,3 +84,24 @@ class TestRelayMessage(TestCase):
         self.assertEqual(f, m['Sender'])
         self.assertIn('Reply-to', m)
         self.assertEqual('member@example.com', m['Reply-to'])
+
+    @patch.object(RelayMessage, 'get_auditor')
+    @patch.object(RelayMessage, 'get_dmarc_policy_for_host')
+    @patch.object(RelayMessage, 'new_to')
+    @patch('gs.profile.email.relay.relayer.send_email')
+    @patch('gs.profile.email.relay.relayer.createObject')
+    def test_relay(self, mockCreateObject, mock_send_email, mock_new_to,
+                   mock_get_dmarc_policy_for_host, mock_get_auditor):
+        mockSiteInfo = mockCreateObject.return_value
+        mockSiteInfo.name = 'Le site'
+        supportEmail = 'support@lists.example.com'
+        mockSiteInfo.get_support_email.return_value = supportEmail
+        mock_new_to.return_value = 'user@example.com'
+        mock_get_dmarc_policy_for_host.return_value = 'pass'
+
+        rm = RelayMessage(None)
+        rm.relay(test_email_for_relay)
+        self.assertEqual(1, mock_send_email.call_count)
+        args, kw_args = mock_send_email.call_args
+        # Make sure the To header is correctly set
+        self.assertIn('To: user@example.com', args[2])
