@@ -32,7 +32,7 @@ class RelayEmail(SiteForm):
     def __init__(self, context, request):
         super(RelayEmail, self).__init__(context, request)
 
-    @form.action(name="add", label='Add',
+    @form.action(name="relay", label='Relay',
                  failure='handle_add_action_failure')
     def handle_add(self, action, data):
         try:
