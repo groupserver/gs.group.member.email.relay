@@ -35,7 +35,7 @@ Donkeys are great!
 class TestRelayMessage(TestCase):
     @patch.object(RelayMessage, 'config')
     def test_userId_from_email(self, configMock):
-        configMock.get.return_value = {'relay-address-prefix': None}
+        configMock.get.return_value = {}
 
         rm = RelayMessage(None)
         email = 'p-1a2b3c@groups.example.com'
@@ -44,7 +44,7 @@ class TestRelayMessage(TestCase):
 
     @patch.object(RelayMessage, 'config')
     def test_userId_from_email_not_relay(self, configMock):
-        configMock.get.return_value = {'relay-address-prefix': None}
+        configMock.get.return_value = {}
 
         rm = RelayMessage(None)
         email = 'should.fail@groups.example.com'
@@ -106,7 +106,7 @@ class TestRelayMessage(TestCase):
         mockSiteInfo.get_support_email.return_value = supportEmail
         mock_new_to.return_value = 'user@example.com'
         mock_get_dmarc_policy_for_host.return_value = 'pass'
-        configMock.get.return_value = {'relay-address-prefix': None}
+        configMock.get.return_value = {}
 
         rm = RelayMessage(None)
         rm.relay(test_email_for_relay)
@@ -129,7 +129,7 @@ class TestRelayMessage(TestCase):
     @patch.object(RelayMessage, 'config')
     def test_get_relay_address_prefix_from_config_missing(self, configMock):
         'Test that we get "p-" when the prefix is missing'
-        schema = {'relay-address-prefix': None}
+        schema = {}
         configMock.get.return_value = schema
 
         rm = RelayMessage(None)

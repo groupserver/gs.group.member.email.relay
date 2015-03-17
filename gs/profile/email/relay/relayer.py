@@ -43,9 +43,8 @@ class RelayMessage(object):
     @Lazy
     def relayAddressPrefix(self):
         self.config.set_schema('smtp', {'relay-address-prefix': str})
-        ws = self.config.get('smtp')
-        retval = ws['relay-address-prefix']
-        retval = retval if retval else 'p-'
+        ws = self.config.get('smtp', strict=False)
+        retval = ws.get('relay-address-prefix', 'p-')
         return retval
 
     @Lazy
