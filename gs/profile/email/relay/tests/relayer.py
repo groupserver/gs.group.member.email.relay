@@ -33,13 +33,19 @@ Donkeys are great!
 
 
 class TestRelayMessage(TestCase):
-    def test_userId_from_email(self):
+    @patch.object(RelayMessage, 'config')
+    def test_userId_from_email(self, configMock):
+        configMock.get.return_value = {'relay-address-prefix': None}
+
         rm = RelayMessage(None)
         email = 'p-1a2b3c@groups.example.com'
         r = rm.userId_from_email(email)
         self.assertEqual('1a2b3c', r)
 
-    def test_userId_from_email_not_relay(self):
+    @patch.object(RelayMessage, 'config')
+    def test_userId_from_email_not_relay(self, configMock):
+        configMock.get.return_value = {'relay-address-prefix': None}
+
         rm = RelayMessage(None)
         email = 'should.fail@groups.example.com'
         with self.assertRaises(ValueError):
@@ -85,19 +91,22 @@ class TestRelayMessage(TestCase):
         self.assertIn('Reply-to', m)
         self.assertEqual('member@example.com', m['Reply-to'])
 
+    @patch.object(RelayMessage, 'config')
     @patch.object(RelayMessage, 'get_auditor')
     @patch.object(RelayMessage, 'get_dmarc_policy_for_host')
     @patch.object(RelayMessage, 'new_to')
     @patch('gs.profile.email.relay.relayer.send_email')
     @patch('gs.profile.email.relay.relayer.createObject')
     def test_relay(self, mockCreateObject, mock_send_email, mock_new_to,
-                   mock_get_dmarc_policy_for_host, mock_get_auditor):
+                   mock_get_dmarc_policy_for_host, mock_get_auditor,
+                   configMock):
         mockSiteInfo = mockCreateObject.return_value
         mockSiteInfo.name = 'Le site'
         supportEmail = 'support@lists.example.com'
         mockSiteInfo.get_support_email.return_value = supportEmail
         mock_new_to.return_value = 'user@example.com'
         mock_get_dmarc_policy_for_host.return_value = 'pass'
+        configMock.get.return_value = {'relay-address-prefix': None}
 
         rm = RelayMessage(None)
         rm.relay(test_email_for_relay)
@@ -105,3 +114,24 @@ class TestRelayMessage(TestCase):
         args, kw_args = mock_send_email.call_args
         # Make sure the To header is correctly set
         self.assertIn('To: user@example.com', args[2])
+
+    @patch.object(RelayMessage, 'config')
+    def test_get_relay_address_prefix_from_config(self, configMock):
+        'Test that we get the relay-address prefix from the config'
+        prefix = 'hamster-'
+        schema = {'relay-address-prefix': prefix}
+        configMock.get.return_value = schema
+
+        rm = RelayMessage(None)
+        r = rm.relayAddressPrefix
+        self.assertEqual(prefix, r)
+
+    @patch.object(RelayMessage, 'config')
+    def test_get_relay_address_prefix_from_config_missing(self, configMock):
+        'Test that we get "p-" when the prefix is missing'
+        schema = {'relay-address-prefix': None}
+        configMock.get.return_value = schema
+
+        rm = RelayMessage(None)
+        r = rm.relayAddressPrefix
+        self.assertEqual('p-', r)
