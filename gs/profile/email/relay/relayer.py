@@ -20,20 +20,34 @@ import re
 from zope.cachedescriptors.property import Lazy
 from zope.component import createObject
 from gs.dmarc import (lookup_receiver_policy, ReceiverPolicy)
-from gs.profile.email.base import EmailUser
-from gs.email import send_email
 from gs.cache import cache
-from .audit import RELAY_TO_USER_FROM_USER, RELAY_TO_USER_FROM_NONUSER, Auditor
+from gs.config import (Config, getInstanceId)
+from gs.email import send_email
+from gs.profile.email.base import EmailUser
+from .audit import (
+    RELAY_TO_USER_FROM_USER, RELAY_TO_USER_FROM_NONUSER, Auditor)
 
-
-RELAY_ADDRESS_PREFIX = 'p-'
 
 class RelayMessage(object):
-    relayAddrRe = re.compile('%s(.+)@(.+)' % RELAY_ADDRESS_PREFIX)
     actualPolicies = (ReceiverPolicy.quarantine, ReceiverPolicy.reject)
 
     def __init__(self, context):
         self.context = context
+
+    @Lazy
+    def relayAddressPrefix(self):
+        instanceId = getInstanceId()
+        config = Config(instanceId)
+        config.set_schema('smtp', {'relay-address-prefix': str})
+        ws = config.get('smtp')
+        retval = ws['relay-address-prefix']
+        retval = retval if retval else 'p-'
+        return retval
+
+    @Lazy
+    def relayAddrRe(self):
+        retval = re.compile('%s(.+)@(.+)' % self.relayAddressPrefix)
+        return retval
 
     @Lazy
     def siteInfo(self):
@@ -122,7 +136,8 @@ class RelayMessage(object):
         auditor = self.get_auditor(rui, sui)
         oldToAddress = parseaddr(oldTo)[1]
         if sui is None:
-            auditor.info(RELAY_TO_USER_FROM_NONUSER, oldToAddress, oldFrom[1])
+            auditor.info(RELAY_TO_USER_FROM_NONUSER, oldToAddress,
+                         oldFrom[1])
         else:
             auditor.info(RELAY_TO_USER_FROM_USER, oldToAddress)
 
