@@ -102,20 +102,26 @@ class RelayMessage(object):
 
     def munge_for_dmarc(self, message):
         oldFrom = parseaddr(message['From'])
-        message['Sender'] = message['From']
+        if 'Sender' in message:
+            message.add_header('x-gs-relay-sender', message['Sender'])
+            message.replace_header('Sender', message['From'])
+        else:
+            message.add_header('Sender', message['From'])
+
         if 'Reply-to' not in message:
             # Reply-to just contains the addr, not the fancy names
-            message['Reply-to'] = oldFrom[1]
+            message.add_header('Reply-to', oldFrom[1])
+
         viaName = self.get_via_name(oldFrom[0])
-        message['From'] = formataddr((viaName,
-                                      self.siteInfo.get_support_email()))
+        newFrom = formataddr((viaName, self.siteInfo.get_support_email()))
+        message.replace_header('From', newFrom)
 
     def relay(self, messageString):
         parser = Parser()
         message = parser.parsestr(messageString)
 
         oldTo = message['To']
-        message['x-original-to'] = oldTo
+        message['x-gs-relay-to'] = oldTo
         rui = self.userInfo_from_obfuscated_email(oldTo)
         newTo = self.new_to(rui)
         message.replace_header('To', newTo)

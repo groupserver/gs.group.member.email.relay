@@ -13,19 +13,19 @@
 #
 ############################################################################
 from __future__ import absolute_import, unicode_literals, print_function
+from email.parser import Parser
 from mock import patch
 from unittest import TestCase
 from gs.profile.email.relay.relayer import RelayMessage
 
 
 test_email_for_relay = """\
-From: "GroupServer Administrator" <admin@gstest>
+From: "GroupServer Administrator" <admin@example.com>
 Subject: Donkeys
-To: p-userId1@gstest
+To: p-userId1@example.com
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
-Sender: "GroupServer Administrator" <admin@gstest>
 
 Donkeys are great!
 
@@ -75,21 +75,65 @@ class TestRelayMessage(TestCase):
         supportEmail = 'support@lists.example.com'
         mockSiteInfo.get_support_email.return_value = supportEmail
 
-        # --=mpj17=-- We do not need a full message, just a dict that looks
-        # like the headers of an email message
-        f = 'Me! <member@example.com>'
-        m = {}
-        m['From'] = f
+        m = Parser().parsestr(test_email_for_relay)
+        f = m['From']
+
         rm = RelayMessage(None)
         rm.munge_for_dmarc(m)
 
         self.assertIn('From', m)
-        expected = 'Me! via Le site <{0}>'.format(supportEmail)
+        e = 'GroupServer Administrator via Le site <{0}>'
+        expected = e.format(supportEmail)
         self.assertEqual(expected, m['From'])
         self.assertIn('Sender', m)
         self.assertEqual(f, m['Sender'])
         self.assertIn('Reply-to', m)
-        self.assertEqual('member@example.com', m['Reply-to'])
+        self.assertEqual('admin@example.com', m['Reply-to'])
+
+        # Check that we only have one From header. This happend.
+        fs = m.get_all('From')
+        self.assertEqual(1, len(fs))
+
+    @patch('gs.profile.email.relay.relayer.createObject')
+    def test_munge_for_dmarc_sender(self, mockCreateObject):
+        'Test that we replace the sender'
+        mockSiteInfo = mockCreateObject.return_value
+        mockSiteInfo.name = 'Le site'
+        supportEmail = 'support@lists.example.com'
+        mockSiteInfo.get_support_email.return_value = supportEmail
+
+        m = Parser().parsestr(test_email_for_relay)
+        p = 'Person <person@people.example.com>'
+        m.add_header('Sender', p)
+        f = m['From']
+
+        rm = RelayMessage(None)
+        rm.munge_for_dmarc(m)
+
+        self.assertIn('Sender', m)
+        self.assertEqual(f, m['Sender'])
+        self.assertIn('x-relay-sender', m)
+        self.assertEqual(p, m['x-relay-sender'])
+
+    @patch('gs.profile.email.relay.relayer.createObject')
+    def test_munge_for_dmarc_replyto(self, mockCreateObject):
+        'Test that we leave the Reply-to header unchanged'
+        mockSiteInfo = mockCreateObject.return_value
+        mockSiteInfo.name = 'Le site'
+        supportEmail = 'support@lists.example.com'
+        mockSiteInfo.get_support_email.return_value = supportEmail
+
+        m = Parser().parsestr(test_email_for_relay)
+        p = 'Person <person@people.example.com>'
+        m['Reply-to'] = p
+        rm = RelayMessage(None)
+        rm.munge_for_dmarc(m)
+
+        self.assertIn('Reply-to', m)
+        self.assertEqual(p, m['Reply-to'])
+        # Check that we only have one Reply-to header.
+        replyTos = m.get_all('Reply-to')
+        self.assertEqual(1, len(replyTos))
 
     @patch.object(RelayMessage, 'config')
     @patch.object(RelayMessage, 'get_auditor')
