@@ -112,8 +112,8 @@ class TestRelayMessage(TestCase):
 
         self.assertIn('Sender', m)
         self.assertEqual(f, m['Sender'])
-        self.assertIn('x-relay-sender', m)
-        self.assertEqual(p, m['x-relay-sender'])
+        self.assertIn('x-gs-relay-sender', m)
+        self.assertEqual(p, m['x-gs-relay-sender'])
 
     @patch('gs.profile.email.relay.relayer.createObject')
     def test_munge_for_dmarc_replyto(self, mockCreateObject):
